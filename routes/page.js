@@ -99,10 +99,12 @@ router.post('/delete', (req, res) => {
     }
     var post = req.body;
     var id = post.id;
-    var filteredhack = path.parse(id).base;
-    fs.unlink(`data/${filteredhack}`, function(err){
-        res.redirect('/');
-    });
+    var page = db.get('pages').find({id:id}).value();
+    if (page.user_Id !== req.user.id) {
+        return res.redirect('/');
+    }
+    db.get('pages').remove({id: id}).write();
+    res.redirect('/');
 });
 
 router.get('/:pageId', (req, res, next) => {
@@ -115,7 +117,7 @@ router.get('/:pageId', (req, res, next) => {
     `<a href="/page/new">New Page!!</a>
         <a href="/page/update/${page.id}">update</a> 
         <form action="/page/delete" method="post">
-        <input type="hidden" name="id" value="${sanitizedTitle}">
+        <input type="hidden" name="id" value="${page.id}">
         <input type="submit" value="delete">
         </form>
         `, auth.statusUI(req, res));
