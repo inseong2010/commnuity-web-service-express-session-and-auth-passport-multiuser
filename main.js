@@ -5,6 +5,7 @@ var compression = require('compression');
 var session = require('express-session');
 var fileStore = require('session-file-store')(session);
 var flash  = require('connect-flash');
+var db = require('./lib/db');
 const PORT = 80;
 
 app.use(express.static('public'));
@@ -24,10 +25,8 @@ var passport = require('./lib/passport')(app);
 
 
 app.get('*', (req, res, next) => {
-    fs.readdir('./data', (err, filelist) => {
-        req.list = filelist;
-        next();
-    });
+    req.list = db.get('pages').value();
+    next();
 });
 
 var indexRouter = require('./routes/index');
