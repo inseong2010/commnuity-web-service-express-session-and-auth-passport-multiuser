@@ -5,6 +5,8 @@ const fs = require("fs");
 var sanitizeHtml = require('sanitize-html');
 var template = require('../lib/template');
 var auth = require('../lib/auth');
+var db = require('../lib/db');
+var shortId = require('shortid');
 
 router.get('/new', (req, res) => {
     if (!auth.isOwner(req, res)) {
@@ -34,17 +36,15 @@ router.post('/new', (req, res) => {
     }
     var post = req.body;
     var title = post.title;
-    var description = post.description
-    /* if (!title.value) {
-        return alert("제목 또는 내용을 작성하세요");
-    } else  {*/
-        fs.writeFile(`data/${title}`, description, (err) => {
-            if (err) throw err;
-            else {
-                res.redirect(`/page/${title}`);
-            };
-        });
-    // };
+    var description = post.description;
+    var id = shortId.generate()
+    db.get('pages').push({
+        id: id,
+        title: title,
+        description: description,
+        user_Id: req.user.id
+    }).write();
+    res.redirect(`/page/${id}`);
 });
 
 router.get('/update/:pageId', (req, res) => {
@@ -110,26 +110,20 @@ router.post('/delete', (req, res) => {
 });
 
 router.get('/:pageId', (req, res, next) => {
-    var filteredhack = path.parse(req.params.pageId).base;
-    fs.readFile(`data/${filteredhack}`, 'utf8', function(err, description) {
-        if (err) {
-            next(err);
-        } else {
-        var title = req.params.pageId;
-        var sanitizedTitle = sanitizeHtml(title);
-        var sanitizedDescription = sanitizeHtml(description);
-        var list = template.LIST(req.list);
-        var html = template.HTML(sanitizedTitle, list, `<h2>${sanitizedTitle}</h2><p>${sanitizedDescription}</p>`, 
-        `<a href="/page/new">New Page!!</a>
-            <a href="/page/update/${sanitizedTitle}">update</a> 
-            <form action="/page/delete" method="post">
-            <input type="hidden" name="id" value="${sanitizedTitle}">
-            <input type="submit" value="delete">
-            </form>
-            `, auth.statusUI(req, res));
-        res.send(html);
-        };
-    });
+    var page = db.get('pages').find({id: req.params.pageId}).value();
+    var user = db.get('users').find({id:page.user_Id}).value();
+    var sanitizedTitle = sanitizeHtml(page.title);
+    var sanitizedDescription = sanitizeHtml(page.description);
+    var list = template.LIST(req.list);
+    var html = template.HTML(sanitizedTitle, list, `<h2>${sanitizedTitle}</h2><p>${sanitizedDescription}</p> <p>by ${user.nickname}</p>`, 
+    `<a href="/page/new">New Page!!</a>
+        <a href="/page/update/${sanitizedTitle}">update</a> 
+        <form action="/page/delete" method="post">
+        <input type="hidden" name="id" value="${sanitizedTitle}">
+        <input type="submit" value="delete">
+        </form>
+        `, auth.statusUI(req, res));
+    res.send(html);
 });
 
 module.exports = router;
