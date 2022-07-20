@@ -1,9 +1,11 @@
-module.exports = function (passport) {
-    var express = require('express');
-    var router = express.Router();
-    var template = require('../lib/template');
-    var auth = require('../lib/auth');
+var express = require('express');
+var router = express.Router();
+var template = require('../lib/template');
+var auth = require('../lib/auth');
+var shortid = require('shortid');
+var db = require('../lib/db');
 
+module.exports = function (passport) {
     router.get('/login', (req, res) => {
         var fmsg = req.flash();
         var feedback = '';
@@ -44,12 +46,47 @@ module.exports = function (passport) {
         <form action="/auth/register" method="post">
             <p><input type="text" name="email" placeholder="email"class="email"></p>
             <p><input type="password" name="pw" placeholder="password"class="pw"></p>
-            <p><input type="password" name="confirm-pw" placeholder="confirmPassword"></p>
+            <p><input type="password" name="confirmPw" placeholder="confirmPassword"></p>
             <p><input type="text" name="nickname" placeholder="nickname"></p>
             <p><input type="submit" value="register"></p>
         </form>
         `, ''); 
         res.send(html);
+    });
+
+    router.post('/register', (req, res) => {
+        var post = req.body;
+        var email = post.email;
+        var pw = post.pw;
+        var confirmPw = post.confirmPw;
+        var nickname = post.nickname;
+        /* if (!email.value) {
+            req.flash('error', 'Please enter your e-mail.');
+        } else if (!pw.value) {
+            req.flash('error', 'Please enter your password.');
+        } else if (!confirmPw.value) {
+            req.flash('error', 'Please enter the verification password.');
+        } else if (!nickname.value) {
+            req.flash('error', 'Please enter your nickname.');
+         } else */ /* if (pw !== confirmPw) {
+            req.flash('error', 'Password must same!');
+        } else { */
+            var user = {
+                id: shortid.generate(),
+                email: email,
+                password: pw,
+                nickname: nickname,
+            };
+            db.get('users').push(user).write();
+            req.login(user, (err) => {
+                if (err) {
+                    console.error('ERROR: ' + err);
+                    throw err;
+                } else {
+                    return res.redirect('/');
+                }
+            });
+        // }
     });
 
     router.get('/logout', (req, res) => {

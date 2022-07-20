@@ -5,7 +5,6 @@ var compression = require('compression');
 var session = require('express-session');
 var fileStore = require('session-file-store')(session);
 var flash  = require('connect-flash');
-
 const PORT = 80;
 
 app.use(express.static('public'));
