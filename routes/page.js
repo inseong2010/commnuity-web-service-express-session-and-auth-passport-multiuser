@@ -52,14 +52,17 @@ router.get('/update/:pageId', (req, res) => {
         res.redirect(`/auth/login`);
         return false;
     }
-    var filteredhack = path.parse(req.params.pageId).base;
-    fs.readFile(`data/${filteredhack}`, 'utf8', function(err, description) {
+    var page = db.get('pages').find({id: req.params.pageId}).value();
+    if (page.user_Id !== req.user.id) {
+        return res.redirect('/');
+    }
     var list = template.LIST(req.list);
-    var title = req.params.pageId;
+    var title = page.title;
+    var description = page.description;
     var html = template.HTML(title, list, 
     `
     <form action="/page/update" method="post">
-        <input type="hidden" name="id" value="${title}">
+        <input type="hidden" name="id" value="${page.id}">
         <p><input type="text" name="title" placeholder="title"class="title" value="${title}"></p>
         <p>
             <textarea name="description" placeholder="description" class="desc">${description}</textarea>
@@ -68,9 +71,8 @@ router.get('/update/:pageId', (req, res) => {
             <input type="submit">
         </p>
     </form>
-    `, `<a href="/page/new">New Page!!</a> <a href="/page/update/${title}">update</a>`, auth.statusUI(req, res));
-        res.send(html);
-    });
+    `, `<a href="/page/new">New Page!!</a> <a href="/page/update/${page.id}">update</a>`, auth.statusUI(req, res));
+    res.send(html);
 });
 
 router.post('/update', (req, res) => {
@@ -82,18 +84,12 @@ router.post('/update', (req, res) => {
     var id = post.id;
     var title = post.title;
     var description = post.description;
-    fs.rename(`data/${id}`, `data/${title}`, function(err) {
-        if (err) {
-            console.log('ERROR:' + err);
-            throw err;
-        }
-        fs.writeFile(`data/${title}`, description, (err) => {
-            if (err) throw err;
-            else {
-                res.redirect(`/page/${title}`);
-            };
-        });
-    });
+    var page = db.get('pages').find({id: id}).value();
+    if (page.user_Id !== req.user.id) {
+        return res.redirect('/');
+    }
+    db.get('pages').find({id: id}).assign({title: title, description: description}).write();
+    res.redirect(`/page/${page.id}`);
 });
 
 router.post('/delete', (req, res) => {
@@ -117,7 +113,7 @@ router.get('/:pageId', (req, res, next) => {
     var list = template.LIST(req.list);
     var html = template.HTML(sanitizedTitle, list, `<h2>${sanitizedTitle}</h2><p>${sanitizedDescription}</p> <p>by ${user.nickname}</p>`, 
     `<a href="/page/new">New Page!!</a>
-        <a href="/page/update/${sanitizedTitle}">update</a> 
+        <a href="/page/update/${page.id}">update</a> 
         <form action="/page/delete" method="post">
         <input type="hidden" name="id" value="${sanitizedTitle}">
         <input type="submit" value="delete">
