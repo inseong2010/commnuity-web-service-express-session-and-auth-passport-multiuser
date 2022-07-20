@@ -1,21 +1,27 @@
 {
   "users": [
     {
+      "id": "-CLfUouRN",
+      "email": "test",
+      "password": "$2b$10$lcj/Hl4UEnih1OEz4TvJJeQCdYuDZpVJDC45n/HKj/Himo38JI.Uy",
+      "nickname": "test"
+    },
+    {
       "id": "GK1UBoNHz",
       "email": "admin",
-      "password": "ADMIN",
+      "password": "$2b$10$ub4wFhLQtSs3N..YudWaGuLDQan.XPgUW6JoWiLQd4MiNa3Zp7BKm",
       "nickname": "ADMIN"
     },
     {
       "id": "GZmeMFYa6",
       "email": "13",
-      "password": "13",
+      "password": "$2b$10$e7pvoMC0sHGCnNBYD68oK.PVjnHUaNgSmrn5/nGeqoM2c4PKbXfki",
       "nickname": "13"
     },
     {
       "id": "JvYNMRZ9j",
       "email": "133",
-      "password": "122",
+      "password": "$2b$10$h7a397oC/LmIfXmwUdeABOTJQZ7TkMRs2LnQ2PKz/9KSf9wueGo7e",
       "nickname": "122"
     }
   ],

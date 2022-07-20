@@ -4,6 +4,7 @@ var template = require('../lib/template');
 var auth = require('../lib/auth');
 var shortid = require('shortid');
 var db = require('../lib/db');
+var bcrypt = require('bcrypt');
 
 module.exports = function (passport) {
     router.get('/login', (req, res) => {
@@ -71,22 +72,28 @@ module.exports = function (passport) {
          } else */ /* if (pw !== confirmPw) {
             req.flash('error', 'Password must same!');
         } else { */
-            var user = {
-                id: shortid.generate(),
-                email: email,
-                password: pw,
-                nickname: nickname,
-            };
-            db.get('users').push(user).write();
-            req.login(user, (err) => {
-                if (err) {
-                    console.error('ERROR: ' + err);
-                    throw err;
-                } else {
-                    return res.redirect('/');
-                }
-            });
-        // }
+        bcrypt.hash(pw, 10, (err, hash) => {
+            if (err) {
+                console.error('ERROR:' + err);
+                throw err;
+            } else {
+                var user = {
+                    id: shortid.generate(),
+                    email: email,
+                    password: hash,
+                    nickname: nickname,
+                };
+                db.get('users').push(user).write();
+                req.login(user, (err) => {
+                    if (err) {
+                        console.error('ERROR: ' + err);
+                        throw err;
+                    } else {
+                        return res.redirect('/');
+                    }
+                });
+            }
+        });
     });
 
     router.get('/logout', (req, res) => {
